@@ -2,6 +2,7 @@ import { useEffect, useState, useLayoutEffect } from "react";
 import { StyleSheet, Pressable } from "react-native";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
+import { REACT_APP_API_KEY } from "@env";
 
 import BookDetail from "../components/BookDetail";
 
@@ -56,9 +57,7 @@ const BookDetailsScreen = ({ route, navigation }) => {
   useEffect(() => {
     const res = axios
       .get(
-        "https://www.googleapis.com/books/v1/volumes/" +
-          bookId +
-          "?key=AIzaSyA6Ls27tf7tNn5-t8E3R843qaLSVN8Vo_Q"
+        `https://www.googleapis.com/books/v1/volumes/${bookId}?key=${REACT_APP_API_KEY}`
       )
       .then((res) => {
         setBookData(res.data.volumeInfo);

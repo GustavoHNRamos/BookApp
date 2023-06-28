@@ -9,3 +9,21 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+model Book {
+  id          String @id @default(uuid())
+  image       String
+  title       String
+  authors     String
+  language    String
+  pub         String
+  date        String
+  pages       Int
+  matRating   String
+  categories  String?
+  type        String
+  height      String?
+  width       String?
+  thickness   String?
+  desc        String
+}
