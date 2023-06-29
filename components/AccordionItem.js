@@ -36,12 +36,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   accordHeader: {
-    padding: 10,
-    backgroundColor: "#ccc",
-    color: "#eee",
     flex: 1,
+    padding: 10,
+    backgroundColor: "#fff",
     flexDirection: "row",
     justifyContent: "space-between",
+    borderRadius: 10,
+    marginTop: 5,
   },
   accordTitle: {
     fontSize: 16,

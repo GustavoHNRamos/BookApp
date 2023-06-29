@@ -17,25 +17,9 @@ const BookDetail = ({
   thickness,
   desc,
 }) => {
-  let description;
   function capitalizeFirstLetter(string) {
     return string?.charAt(0).toUpperCase() + string?.slice(1);
   }
-
-  description = desc
-    ?.replaceAll("<p>", "")
-    .replaceAll("</p>", "")
-    .replaceAll("<i>", "")
-    .replaceAll("</i>", "")
-    .replaceAll("<br>", "\n")
-    .replaceAll("</br>", "")
-    .replaceAll("<b>", "")
-    .replaceAll("</b>", "")
-    .replaceAll("<ul>", ",")
-    .replaceAll("</ul>", ".")
-    .replaceAll("<li>", "")
-    .replaceAll("</li>", "")
-    .replace("Note: " || "note: ", "");
 
   return (
     <View style={styles.rootContainer}>
@@ -110,7 +94,7 @@ const BookDetail = ({
             </View>
           )}
           <AccordionItem title="Description">
-            <Text>{description}</Text>
+            <Text>{desc}</Text>
           </AccordionItem>
         </View>
       </ScrollView>

@@ -1,10 +1,12 @@
-import { useEffect, useState, useLayoutEffect } from "react";
+import { useEffect, useState, useLayoutEffect, useContext } from "react";
 import { StyleSheet, Pressable } from "react-native";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
 import { REACT_APP_API_KEY } from "@env";
+import { prisma } from "..";
 
 import BookDetail from "../components/BookDetail";
+import { FavouritesContext } from "../store/context/favourites-context";
 
 function IconButton({ onPress, color }) {
   return (
@@ -18,13 +20,17 @@ function IconButton({ onPress, color }) {
 }
 
 const BookDetailsScreen = ({ route, navigation }) => {
+  const favouriteBooksCtx = useContext(FavouritesContext);
   const { bookId } = route.params;
-  let imageLink;
+  const [bookData, setBookData] = useState([]);
+  const [like, setLike] = useState(false);
+
+  let image;
   let title;
   let authors;
   let language;
-  let publisher;
-  let publishedDate;
+  let pub;
+  let date;
   let pages;
   let matRating;
   let categories;
@@ -32,27 +38,7 @@ const BookDetailsScreen = ({ route, navigation }) => {
   let height;
   let width;
   let thickness;
-
-  const [bookData, setBookData] = useState([]);
-  const [like, setLike] = useState(false);
-
-  function headerButtonPressHandler() {
-    setLike(!like);
-  }
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => {
-        if (like) {
-          // console.log("favourite");
-          return <IconButton onPress={headerButtonPressHandler} color="red" />;
-        } else {
-          // console.log("not favourite");
-          return <IconButton onPress={headerButtonPressHandler} color="#ccc" />;
-        }
-      },
-    });
-  }, [navigation, headerButtonPressHandler]);
+  let desc;
 
   useEffect(() => {
     const res = axios
@@ -65,34 +51,104 @@ const BookDetailsScreen = ({ route, navigation }) => {
       .catch((err) => console.log(err));
   }, [bookId]);
 
-  if (bookData) {
-    if (bookData.imageLinks?.hasOwnProperty("large")) {
-      imageLink = bookData.imageLinks.large.replace("http", "https");
+  if (bookData?.imageLinks?.hasOwnProperty("large")) {
+    image = bookData?.imageLinks?.large?.replace("http", "https");
+  } else {
+    image = bookData?.imageLinks?.thumbnail?.replace("http", "https");
+  }
+
+  title = bookData?.title;
+  authors = bookData?.authors?.toString()?.replaceAll(",", ", ");
+  language = bookData?.language;
+  pub = bookData?.publisher;
+  date = bookData?.publishedDate;
+  pages = bookData?.pageCount;
+  matRating = bookData?.maturityRating?.toLowerCase().replace("_", " ");
+  categories = bookData?.categories;
+  type = bookData?.printType?.toLowerCase();
+  height = bookData?.dimensions?.height;
+  width = bookData?.dimensions?.width;
+  thickness = bookData?.dimensions?.thickness;
+  desc = bookData?.description
+    ?.replaceAll("<p>", "")
+    .replaceAll("</p>", "")
+    .replaceAll("<i>", "")
+    .replaceAll("</i>", "")
+    .replaceAll("<br>", "\n")
+    .replaceAll("</br>", "")
+    .replaceAll("<b>", "")
+    .replaceAll("</b>", "")
+    .replaceAll("<ul>", ",")
+    .replaceAll("</ul>", ".")
+    .replaceAll("<li>", "")
+    .replaceAll("</li>", "")
+    .replace("Note: " || "note: ", "");
+
+  // const createBookQuery = async function (props) {
+  //   const bookDb = await prisma.book.create({
+  //     data: {
+  //       book_id: bookId,
+  //       image: props.image,
+  //       title: props.title,
+  //       authors: props.authors,
+  //       language: props.language,
+  //       pub: props.pub,
+  //       date: props.date,
+  //       pages: props.pages,
+  //       matRating: props.matRating,
+  //       categories: props.categories,
+  //       type: props.type,
+  //       height: props.height,
+  //       width: props.width,
+  //       thickness: props.thickness,
+  //       desc: props.desc,
+  //     },
+  //   });
+  // };
+
+  // const removeBookQuery = async function ({ id }) {
+  //   const bookDb = await prisma.book.delete({
+  //     where: {
+  //       book_id: bookId,
+  //     },
+  //   });
+  //   console.log(bookDb);
+  // };
+
+  const bookIsFavorite = favouriteBooksCtx.ids.includes(bookId);
+
+  function headerButtonPressHandler() {
+    setLike(!like);
+    if (bookIsFavorite) {
+      favouriteBooksCtx.removeFavourite(bookId);
     } else {
-      imageLink = bookData?.imageLinks?.thumbnail?.replace("http", "https");
+      favouriteBooksCtx.addFavourite(bookId);
     }
+  }
 
-    title = bookData.title;
-    authors = bookData.authors?.toString()?.replaceAll(",", ", ");
-    language = bookData.language;
-    publisher = bookData.publisher;
-    publishedDate = bookData.publishedDate;
-    pages = bookData.pageCount;
-    matRating = bookData.maturityRating?.toLowerCase().replace("_", " ");
-    categories = bookData.categories;
-    type = bookData.printType?.toLowerCase();
-    height = bookData.dimensions?.height;
-    width = bookData.dimensions?.width;
-    thickness = bookData.dimensions?.thickness;
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => {
+        return (
+          <IconButton
+            onPress={headerButtonPressHandler}
+            color={bookIsFavorite ? "red" : "#ccc"}
+          />
+        );
+      },
+      headerTitle: title,
+    });
+  }, [navigation, headerButtonPressHandler]);
 
+  if (bookData) {
     return (
       <BookDetail
-        image={imageLink}
+        image={image}
         title={title}
         authors={authors}
         language={language}
-        pub={publisher}
-        date={publishedDate}
+        pub={pub}
+        date={date}
         pages={pages}
         matRating={matRating}
         categories={categories}
@@ -100,7 +156,7 @@ const BookDetailsScreen = ({ route, navigation }) => {
         height={height}
         width={width}
         thickness={thickness}
-        desc={bookData.description}
+        desc={desc}
       />
     );
   }
